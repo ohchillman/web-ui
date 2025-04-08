@@ -171,6 +171,7 @@ def get_llm_model(provider: str, **kwargs):
         )
     elif provider == "openrouter":
         if not kwargs.get("base_url", ""):
+            # Исправленный базовый URL для OpenRouter с полным путем к API
             base_url = os.getenv("OPENROUTER_ENDPOINT", "https://openrouter.ai/api/v1")
         else:
             base_url = kwargs.get("base_url")
@@ -187,7 +188,8 @@ def get_llm_model(provider: str, **kwargs):
         frequency_penalty = kwargs.get("frequency_penalty", None)
         presence_penalty = kwargs.get("presence_penalty", None)
         
-        return ChatOpenAI(
+        # Используем ChatOpenAI с правильной конфигурацией для OpenRouter
+        llm = ChatOpenAI(
             model=kwargs.get("model_name", "openai/gpt-4o"),
             temperature=kwargs.get("temperature", 0.0),
             max_tokens=max_tokens,
@@ -198,6 +200,26 @@ def get_llm_model(provider: str, **kwargs):
             api_key=api_key,
             default_headers=headers,
         )
+        
+        # Проверяем и настраиваем клиент для правильного использования API OpenRouter
+        if hasattr(llm, 'client') and hasattr(llm.client, 'base_url'):
+            # Убедимся, что URL имеет правильный формат для OpenRouter
+            # Базовый URL должен быть https://openrouter.ai/api/v1
+            # Запросы будут отправляться на https://openrouter.ai/api/v1/chat/completions
+            
+            # Если URL не содержит /api/v1, добавляем его
+            if '/api/v1' not in llm.client.base_url:
+                if llm.client.base_url.endswith('/'):
+                    llm.client.base_url = f"{llm.client.base_url}api/v1"
+                else:
+                    llm.client.base_url = f"{llm.client.base_url}/api/v1"
+            
+            # Убираем /chat/completions из базового URL, если он там есть
+            # так как ChatOpenAI добавит его автоматически
+            if llm.client.base_url.endswith('/chat/completions'):
+                llm.client.base_url = llm.client.base_url.replace('/chat/completions', '')
+        
+        return llm
     else:
         raise ValueError(f"Unsupported provider: {provider}")
 
