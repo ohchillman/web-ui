@@ -175,11 +175,28 @@ def get_llm_model(provider: str, **kwargs):
         else:
             base_url = kwargs.get("base_url")
 
+        # Создаем дополнительные заголовки для OpenRouter
+        headers = {
+            "HTTP-Referer": os.getenv("OPENROUTER_REFERER", "https://github.com/ohchillman/web-ui"),
+            "X-Title": os.getenv("OPENROUTER_TITLE", "Web-UI with OpenRouter Integration")
+        }
+        
+        # Получаем дополнительные параметры для OpenRouter
+        max_tokens = kwargs.get("max_tokens", None)
+        top_p = kwargs.get("top_p", None)
+        frequency_penalty = kwargs.get("frequency_penalty", None)
+        presence_penalty = kwargs.get("presence_penalty", None)
+        
         return ChatOpenAI(
             model=kwargs.get("model_name", "openai/gpt-4o"),
             temperature=kwargs.get("temperature", 0.0),
+            max_tokens=max_tokens,
+            top_p=top_p,
+            frequency_penalty=frequency_penalty,
+            presence_penalty=presence_penalty,
             base_url=base_url,
             api_key=api_key,
+            default_headers=headers,
         )
     else:
         raise ValueError(f"Unsupported provider: {provider}")
@@ -199,9 +216,24 @@ model_names = {
     "alibaba": ["qwen-plus", "qwen-max", "qwen-turbo", "qwen-long"],
     "moonshot": ["moonshot-v1-32k-vision-preview", "moonshot-v1-8k-vision-preview"],
     "unbound": ["gemini-2.0-flash","gpt-4o-mini", "gpt-4o", "gpt-4.5-preview"],
-    "openrouter": ["openai/gpt-4o", "openai/gpt-3.5-turbo", "google/gemini-pro", "google/gemini-1.5-pro", 
-                  "anthropic/claude-3-opus", "anthropic/claude-3-sonnet", "mistral/mistral-large", 
-                  "meta/llama-3-70b-instruct", "meta/llama-3-8b-instruct"]
+    "openrouter": [
+        "openai/gpt-4o", 
+        "openai/gpt-3.5-turbo", 
+        "google/gemini-pro", 
+        "google/gemini-1.5-pro", 
+        "anthropic/claude-3-opus", 
+        "anthropic/claude-3-sonnet", 
+        "mistral/mistral-large", 
+        "meta/llama-3-70b-instruct", 
+        "meta/llama-3-8b-instruct",
+        "google/gemini-1.0-pro",
+        "google/gemini-1.5-flash",
+        "anthropic/claude-3-haiku",
+        "mistral/mistral-small",
+        "mistral/mistral-medium",
+        "cohere/command-r",
+        "cohere/command-r-plus"
+    ]
 }
 
 
